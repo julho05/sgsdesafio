@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SGS — Sistema de Gestão de Solicitações</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<header>SGS — Sistema de Gestão de Solicitações</header>
+
+<nav>
+  <button class="active" onclick="showPage('listagem', this)">📋 Listagem</button>
+  <button onclick="showPage('cadastro', this)">➕ Nova Solicitação</button>
+</nav>
+
+<!-- PÁGINA LISTAGEM -->
+<div id="page-listagem" class="page active">
+  <h2>Solicitações</h2>
+  <div class="card">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Status</label>
+        <select id="filtro-status">
+          <option value="">Todos</option>
+          <option>SOLICITADO</option>
+          <option>LIBERADO</option>
+          <option>APROVADO</option>
+          <option>REJEITADO</option>
+          <option>CANCELADO</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Data início</label>
+        <input type="date" id="filtro-inicio" />
+      </div>
+      <div class="form-group">
+        <label>Data fim</label>
+        <input type="date" id="filtro-fim" />
+      </div>
+      <div class="form-group">
+        <label>Categoria</label>
+        <select id="filtro-categoria">
+          <option value="">Todas</option>
+        </select>
+      </div>
+      <div class="form-group" style="justify-content:flex-end; align-self:flex-end;">
+        <button class="btn btn-primary" onclick="carregarListagem()">Filtrar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div id="alerta-listagem"></div>
+    <table>
+      <thead>
+      <tr>
+        <th>#</th>
+        <th>Solicitante</th>
+        <th>Documento</th>
+        <th>Categoria</th>
+        <th>Valor</th>
+        <th>Data</th>
+        <th>Status</th>
+        <th>Ações</th>
+      </tr>
+      </thead>
+      <tbody id="tabela-corpo">
+      <tr><td colspan="8" class="empty">Carregando...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- PÁGINA CADASTRO -->
+<div id="page-cadastro" class="page">
+  <h2>Nova Solicitação</h2>
+  <div class="card" style="max-width:640px;">
+    <div id="alerta-cadastro"></div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Solicitante *</label>
+        <select id="cad-solicitante"></select>
+      </div>
+      <div class="form-group">
+        <label>Categoria *</label>
+        <select id="cad-categoria"></select>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:16px;">
+      <label>Descrição *</label>
+      <textarea id="cad-descricao" placeholder="Descreva a solicitação..."></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Valor (R$) *</label>
+        <input type="number" id="cad-valor" min="0.01" step="0.01" placeholder="0,00" />
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="cadastrar()">Salvar Solicitação</button>
+  </div>
+</div>
+
+<!-- MODAL DETALHE -->
+<div class="modal-overlay" id="modal-detalhe">
+  <div class="modal">
+    <h3>Detalhes da Solicitação</h3>
+    <div id="modal-conteudo"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="fecharModal('modal-detalhe')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL STATUS -->
+<div class="modal-overlay" id="modal-status">
+  <div class="modal">
+    <h3>Alterar Status</h3>
+    <p id="status-info"></p>
+    <div class="form-group" style="margin-bottom:20px;">
+      <label>Novo status</label>
+      <select id="select-novo-status"></select>
+    </div>
+    <div id="alerta-status"></div>
+    <div class="modal-footer" style="display:flex; gap:10px; justify-content:flex-end;">
+      <button class="btn btn-secondary" onclick="fecharModal('modal-status')">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmarStatus()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
