@@ -1,10 +1,8 @@
-// Endereço do backend — onde a API está rodando
 const API = 'http://localhost:8080/api/solicitacoes';
 
-// Guarda o id da solicitação que estamos alterando o status
 let solicitacaoAtualId = null;
 
-// Regras de quais status são permitidos a partir de cada status atual
+// Status permitidos para cada transição
 const transicoes = {
   SOLICITADO: ['LIBERADO', 'REJEITADO'],
   LIBERADO:   ['APROVADO', 'REJEITADO'],
@@ -13,79 +11,59 @@ const transicoes = {
   CANCELADO:  []
 };
 
-// ─────────────────────────────────────────
-// NAVEGAÇÃO ENTRE PÁGINAS
-// ─────────────────────────────────────────
+// Troca a página ativa no menu
 function showPage(id, btn) {
-  // Esconde todas as páginas
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  // Remove o destaque de todos os botões do menu
   document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-  // Mostra a página escolhida
   document.getElementById('page-' + id).classList.add('active');
-  // Destaca o botão clicado
   btn.classList.add('active');
-  // Se voltou para listagem, recarrega os dados
   if (id === 'listagem') carregarListagem();
 }
 
-// ─────────────────────────────────────────
-// CARREGA SOLICITANTES E CATEGORIAS
-// (usados nos selects de filtro e cadastro)
-// ─────────────────────────────────────────
+// Carrega solicitantes e categorias para os selects
 async function carregarAuxiliares() {
   const res  = await fetch(API + '/auxiliares');
   const data = await res.json();
 
-  // Preenche o filtro de categorias
   const filtroCategoria = document.getElementById('filtro-categoria');
   data.categorias.forEach(c => {
     filtroCategoria.innerHTML += `<option value="${c.id}">${c.nome}</option>`;
   });
 
-  // Preenche o select de solicitante no cadastro
   const cadSolicitante = document.getElementById('cad-solicitante');
   data.solicitantes.forEach(s => {
     cadSolicitante.innerHTML += `<option value="${s.id}">${s.nome}</option>`;
   });
 
-  // Preenche o select de categoria no cadastro
   const cadCategoria = document.getElementById('cad-categoria');
   data.categorias.forEach(c => {
     cadCategoria.innerHTML += `<option value="${c.id}">${c.nome}</option>`;
   });
 }
 
-// ─────────────────────────────────────────
-// LISTAGEM COM FILTROS
-// ─────────────────────────────────────────
+// Busca as solicitações aplicando os filtros selecionados
 async function carregarListagem() {
-  // Lê os valores dos filtros
   const status      = document.getElementById('filtro-status').value;
   const dataInicio  = document.getElementById('filtro-inicio').value;
   const dataFim     = document.getElementById('filtro-fim').value;
   const categoriaId = document.getElementById('filtro-categoria').value;
 
-  // Monta a URL com os filtros preenchidos
   const params = new URLSearchParams();
   if (status)      params.append('status', status);
   if (dataInicio)  params.append('dataInicio', dataInicio);
   if (dataFim)     params.append('dataFim', dataFim);
   if (categoriaId) params.append('categoriaId', categoriaId);
 
-  // Chama a API
   const res  = await fetch(`${API}?${params.toString()}`);
   const rows = await res.json();
 
   const tbody = document.getElementById('tabela-corpo');
 
-  // Se não encontrou nada
   if (rows.length === 0) {
     tbody.innerHTML = '<tr><td colspan="8" class="empty">Nenhuma solicitação encontrada.</td></tr>';
     return;
   }
 
-  // Monta as linhas da tabela
   tbody.innerHTML = rows.map(r => `
     <tr>
       <td>${r.id}</td>
@@ -105,9 +83,7 @@ async function carregarListagem() {
   `).join('');
 }
 
-// ─────────────────────────────────────────
-// MODAL DETALHE
-// ─────────────────────────────────────────
+// Abre o modal com os detalhes da solicitação
 async function abrirDetalhe(id) {
   const res  = await fetch(`${API}/${id}`);
   const data = await res.json();
@@ -152,16 +128,14 @@ async function abrirDetalhe(id) {
   document.getElementById('modal-detalhe').classList.add('open');
 }
 
-// ─────────────────────────────────────────
-// MODAL ALTERAR STATUS
-// ─────────────────────────────────────────
+// Abre o modal para alterar o status
 function abrirStatus(id, statusAtual) {
   solicitacaoAtualId = id;
 
   document.getElementById('status-info').textContent =
     `Solicitação #${id} — Status atual: ${statusAtual}`;
 
-  // Mostra só os status permitidos para o status atual
+  // Mostra apenas os status permitidos para o status atual
   const select = document.getElementById('select-novo-status');
   select.innerHTML = transicoes[statusAtual]
     .map(s => `<option value="${s}">${s}</option>`)
@@ -171,6 +145,7 @@ function abrirStatus(id, statusAtual) {
   document.getElementById('modal-status').classList.add('open');
 }
 
+// Confirma a alteração de status
 async function confirmarStatus() {
   const novoStatus = document.getElementById('select-novo-status').value;
 
@@ -184,16 +159,14 @@ async function confirmarStatus() {
 
   if (res.ok) {
     fecharModal('modal-status');
-    carregarListagem(); // Atualiza a tabela
+    carregarListagem();
   } else {
     document.getElementById('alerta-status').innerHTML =
       `<div class="alert alert-error">${data.erro}</div>`;
   }
 }
 
-// ─────────────────────────────────────────
-// CADASTRO DE NOVA SOLICITAÇÃO
-// ─────────────────────────────────────────
+// Cadastra uma nova solicitação
 async function cadastrar() {
   const body = {
     solicitanteId: document.getElementById('cad-solicitante').value,
@@ -202,7 +175,6 @@ async function cadastrar() {
     valor:         document.getElementById('cad-valor').value
   };
 
-  // Validação básica
   if (!body.descricao || !body.valor) {
     document.getElementById('alerta-cadastro').innerHTML =
       `<div class="alert alert-error">Preencha todos os campos obrigatórios.</div>`;
@@ -220,7 +192,6 @@ async function cadastrar() {
   if (res.ok) {
     document.getElementById('alerta-cadastro').innerHTML =
       `<div class="alert alert-success">✅ Solicitação #${data.id} cadastrada com sucesso!</div>`;
-    // Limpa os campos após salvar
     document.getElementById('cad-descricao').value = '';
     document.getElementById('cad-valor').value = '';
   } else {
@@ -229,15 +200,11 @@ async function cadastrar() {
   }
 }
 
-// ─────────────────────────────────────────
-// FECHAR MODAL
-// ─────────────────────────────────────────
+// Fecha o modal pelo id
 function fecharModal(id) {
   document.getElementById(id).classList.remove('open');
 }
 
-// ─────────────────────────────────────────
-// INICIALIZAÇÃO — roda quando a página abre
-// ─────────────────────────────────────────
+// Inicialização
 carregarAuxiliares();
 carregarListagem();
