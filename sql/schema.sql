@@ -1,20 +1,20 @@
 CREATE DATABASE IF NOT EXISTS sgs_db;
 USE sgs_db;
 
--- Tabela de Solicitantes
+
 CREATE TABLE IF NOT EXISTS solicitante (
     id         BIGINT AUTO_INCREMENT PRIMARY KEY,
     nome       VARCHAR(150) NOT NULL,
     cpf_cnpj   VARCHAR(18)  NOT NULL UNIQUE
 );
 
--- Tabela de Categorias
+
 CREATE TABLE IF NOT EXISTS categoria (
     id   BIGINT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(100) NOT NULL
 );
 
--- Tabela de Solicitacoes
+
 CREATE TABLE IF NOT EXISTS solicitacao (
     id               BIGINT AUTO_INCREMENT PRIMARY KEY,
     solicitante_id   BIGINT         NOT NULL,
