@@ -2,13 +2,9 @@ package com.sgs.sgs.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import lombok.Getter;
-import lombok.Setter;
 
 @Entity
 @Table(name = "solicitante")
-@Getter
-@Setter
 public class Solicitante {
 
     @Id
@@ -22,4 +18,13 @@ public class Solicitante {
     @NotBlank(message = "CPF/CNPJ é obrigatório")
     @Column(name = "cpf_cnpj", nullable = false, unique = true, length = 18)
     private String cpfCnpj;
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public String getNome() { return nome; }
+    public void setNome(String nome) { this.nome = nome; }
+
+    public String getCpfCnpj() { return cpfCnpj; }
+    public void setCpfCnpj(String cpfCnpj) { this.cpfCnpj = cpfCnpj; }
 }
