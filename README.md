@@ -1,107 +1,65 @@
 # SGS — Sistema de Gestão de Solicitações
 
-Sistema web para cadastrar, listar e acompanhar solicitações de pagamento, desenvolvido como desafio para vaga de Desenvolvedor Júnior.
+Sistema web para gerenciar solicitações de pagamento, desenvolvido como desafio para vaga de Desenvolvedor Júnior.
 
 ---
 
-## 📋 Sobre o Projeto
+## Sobre o Projeto
 
-O SGS permite que uma empresa gerencie suas solicitações de pagamento de forma organizada. O usuário pode cadastrar solicitações, acompanhar o status de cada uma e alterar o fluxo de aprovação.
-
----
-
-## ✅ Funcionalidades
-
-- Listagem de solicitações com filtros por status, data e categoria
-- Cadastro de novas solicitações
-- Visualização detalhada de cada solicitação
-- Alteração de status seguindo regras de negócio
-- Consulta com SQL nativo usando JOIN entre as tabelas
+O SGS permite que uma empresa registre, consulte e acompanhe solicitações de pagamento com controle de fluxo e status.
 
 ---
 
-## 🛠️ Tecnologias
+## Tecnologias Necessárias
 
-| Tecnologia | Para que foi usada |
+Antes de rodar o projeto, certifique-se de ter instalado:
+
+| Tecnologia | Versão |
 |---|---|
-| Java 21 | Linguagem do backend |
-| Spring Boot 3 | Framework para criar a API |
-| Spring Data JPA | Conexão com o banco de dados |
-| MySQL | Banco de dados |
-| Maven | Gerenciador de dependências |
-| HTML, CSS e JavaScript | Frontend da aplicação |
-| Git e GitHub | Controle de versão |
+| Java | 21 |
+| Maven | 3.9+ |
+| MySQL | 8+ |
+| Git | Qualquer |
 
 ---
 
-## 🔄 Regras de Status
+## Como Rodar o Projeto
 
-As solicitações seguem um fluxo definido. Nem todo status pode ir para qualquer outro:
+### 1. Clonar o repositório
 
-```
-SOLICITADO → LIBERADO
-SOLICITADO → REJEITADO
-LIBERADO   → APROVADO
-LIBERADO   → REJEITADO
-APROVADO   → CANCELADO
-REJEITADO  → (estado final)
-CANCELADO  → (estado final)
-```
-
----
-
-## 🗄️ Banco de Dados
-
-O sistema usa 3 tabelas relacionadas:
-
-| Tabela | O que armazena |
-|---|---|
-| `solicitante` | Nome e CPF/CNPJ de quem faz a solicitação |
-| `categoria` | Tipos de solicitação (Serviços, Material, etc) |
-| `solicitacao` | As solicitações em si |
-
----
-
-## 🚀 Como Rodar o Projeto
-
-### Pré-requisitos
-
-- Java 21
-- Maven
-- MySQL
-
-### Passo a passo
-
-**1. Clonar o repositório**
 ```bash
 git clone https://github.com/julho05/sgsdesafio.git
 cd sgsdesafio
 ```
 
-**2. Criar o banco de dados**
+### 2. Criar o banco de dados
+
 ```bash
 mysql -u root -p
 ```
+
 ```sql
 CREATE DATABASE sgs_db;
 exit
 ```
 
-**3. Configurar a senha do MySQL**
+### 3. Configurar a senha do MySQL
 
 Abra o arquivo `src/main/resources/application.properties` e altere:
+
 ```properties
 spring.datasource.password=SUA_SENHA
 ```
 
-**4. Rodar o backend**
+### 4. Rodar o backend
+
 ```bash
 mvn spring-boot:run
 ```
 
 Aguarde aparecer: `Started SgsApplication in X seconds`
 
-**5. Abrir o frontend**
+### 5. Abrir o frontend
 
 Abra o arquivo `frontend/index.html` diretamente no navegador.
 
@@ -109,41 +67,55 @@ Abra o arquivo `frontend/index.html` diretamente no navegador.
 
 ---
 
-## 📡 Endpoints da API
+## Scripts SQL
 
-| Método | Endpoint | O que faz |
-|---|---|---|
-| GET | `/api/solicitacoes` | Lista com filtros opcionais |
-| GET | `/api/solicitacoes/{id}` | Detalhe de uma solicitação |
-| POST | `/api/solicitacoes` | Cadastrar nova solicitação |
-| PATCH | `/api/solicitacoes/{id}/status` | Atualizar status |
-| GET | `/api/solicitacoes/auxiliares` | Retorna solicitantes e categorias |
+Os scripts estão na pasta `sql/` na raiz do projeto:
 
-### Exemplos de filtros
+- `sql/schema.sql` — criação das tabelas
+- `sql/data.sql` — dados iniciais
 
-```
-GET /api/solicitacoes?status=APROVADO
-GET /api/solicitacoes?dataInicio=2026-05-01&dataFim=2026-05-31
-GET /api/solicitacoes?categoriaId=1
+```sql
+CREATE DATABASE IF NOT EXISTS sgs_db;
+USE sgs_db;
+
+CREATE TABLE IF NOT EXISTS solicitante (
+    id       BIGINT AUTO_INCREMENT PRIMARY KEY,
+    nome     VARCHAR(150) NOT NULL,
+    cpf_cnpj VARCHAR(18)  NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS categoria (
+    id   BIGINT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS solicitacao (
+    id               BIGINT AUTO_INCREMENT PRIMARY KEY,
+    solicitante_id   BIGINT         NOT NULL,
+    categoria_id     BIGINT         NOT NULL,
+    descricao        VARCHAR(500)   NOT NULL,
+    valor            DECIMAL(15, 2) NOT NULL,
+    data_solicitacao DATE           NOT NULL,
+    status           VARCHAR(20)    NOT NULL DEFAULT 'SOLICITADO',
+    CONSTRAINT fk_solicitante FOREIGN KEY (solicitante_id) REFERENCES solicitante(id),
+    CONSTRAINT fk_categoria   FOREIGN KEY (categoria_id)   REFERENCES categoria(id)
+);
 ```
 
 ---
 
-## 📁 Estrutura do Projeto
+## Decisões Técnicas
 
-```
-sgs/
-├── sql/
-│   ├── schema.sql           # Criação das tabelas
-│   └── data.sql             # Dados iniciais
-├── frontend/
-│   ├── index.html           # Estrutura da página
-│   ├── style.css            # Estilo visual
-│   └── script.js            # Lógica e comunicação com a API
-└── src/main/java/com/sgs/sgs/
-    ├── entity/              # Representação das tabelas em Java
-    ├── enums/               # Status possíveis
-    ├── repository/          # Acesso ao banco com SQL nativo
-    ├── service/             # Regras de negócio
-    └── controller/          # Endpoints da API
-```
+**SQL nativo na listagem**
+A listagem usa `@Query(nativeQuery = true)` com INNER JOIN entre as 3 tabelas e filtros dinâmicos. A técnica `:parametro IS NULL OR coluna = :parametro` permite usar a mesma query com ou sem filtros.
+
+**Arquitetura em 3 camadas**
+Controller, Service e Repository. Cada camada tem uma responsabilidade única — o Controller recebe as requisições, o Service contém as regras de negócio e o Repository acessa o banco.
+
+**Regras de transição de status**
+Implementadas no Service usando switch expression do Java 21. Cada status só pode ir para status específicos — por exemplo, SOLICITADO só pode ir para LIBERADO ou REJEITADO.
+
+**BigDecimal para valores monetários**
+O tipo `double` foi descartado por ter erros de precisão em operações decimais. O `BigDecimal` garante aritmética exata para valores financeiros.
+
+---
