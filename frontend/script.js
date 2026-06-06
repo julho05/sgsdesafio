@@ -60,7 +60,7 @@ async function carregarListagem() {
   const tbody = document.getElementById('tabela-corpo');
 
   if (rows.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" class="empty">Nenhuma solicitação encontrada.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" class="empty">Nenhuma solicitação encontrada.</td></tr>';
     return;
   }
 
@@ -75,6 +75,7 @@ async function carregarListagem() {
       <td><span class="badge badge-${r.status}">${r.status}</span></td>
       <td>
         <button class="btn-sm btn-detail" onclick="abrirDetalhe(${r.id})">Detalhe</button>
+        <button class="btn-sm btn-edit" onclick="abrirEditar(${r.id})">Editar</button>
         ${transicoes[r.status].length > 0
           ? `<button class="btn-sm btn-status" onclick="abrirStatus(${r.id}, '${r.status}')">Status</button>`
           : ''}
@@ -166,6 +167,83 @@ async function confirmarStatus() {
   }
 }
 
+// Abre o modal de edição com os dados preenchidos
+async function abrirEditar(id) {
+  const res  = await fetch(`${API}/${id}`);
+  const data = await res.json();
+
+  document.getElementById('editar-info').textContent = `Editando Solicitação #${id}`;
+
+  const aux     = await fetch(API + '/auxiliares');
+  const auxData = await aux.json();
+
+  // Preenche o select de solicitantes marcando o atual
+  const selSol = document.getElementById('editar-solicitante');
+  selSol.innerHTML = '';
+  auxData.solicitantes.forEach(s => {
+    const opt    = document.createElement('option');
+    opt.value    = s.id;
+    opt.text     = s.nome;
+    if (s.id === data.solicitante.id) opt.selected = true;
+    selSol.appendChild(opt);
+  });
+
+  // Preenche o select de categorias marcando a atual
+  const selCat = document.getElementById('editar-categoria');
+  selCat.innerHTML = '';
+  auxData.categorias.forEach(c => {
+    const opt    = document.createElement('option');
+    opt.value    = c.id;
+    opt.text     = c.nome;
+    if (c.id === data.categoria.id) opt.selected = true;
+    selCat.appendChild(opt);
+  });
+
+  // Preenche os campos com os dados atuais
+  document.getElementById('editar-descricao').value  = data.descricao;
+  document.getElementById('editar-valor').value      = data.valor;
+  document.getElementById('alerta-editar').innerHTML = '';
+
+  // Guarda o id no modal para usar no confirmarEdicao
+  document.getElementById('modal-editar').dataset.id = id;
+
+  document.getElementById('modal-editar').classList.add('open');
+}
+
+// Salva as alterações da edição
+async function confirmarEdicao() {
+  const id = document.getElementById('modal-editar').dataset.id;
+
+  const body = {
+    solicitanteId: document.getElementById('editar-solicitante').value,
+    categoriaId:   document.getElementById('editar-categoria').value,
+    descricao:     document.getElementById('editar-descricao').value.trim(),
+    valor:         document.getElementById('editar-valor').value
+  };
+
+  if (!body.descricao || !body.valor) {
+    document.getElementById('alerta-editar').innerHTML =
+      `<div class="alert alert-error">Preencha todos os campos.</div>`;
+    return;
+  }
+
+  const res = await fetch(`${API}/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+
+  const data = await res.json();
+
+  if (res.ok) {
+    fecharModal('modal-editar');
+    carregarListagem();
+  } else {
+    document.getElementById('alerta-editar').innerHTML =
+      `<div class="alert alert-error">❌ ${data.erro}</div>`;
+  }
+}
+
 // Cadastra uma nova solicitação
 async function cadastrar() {
   const body = {
@@ -193,7 +271,7 @@ async function cadastrar() {
     document.getElementById('alerta-cadastro').innerHTML =
       `<div class="alert alert-success">✅ Solicitação #${data.id} cadastrada com sucesso!</div>`;
     document.getElementById('cad-descricao').value = '';
-    document.getElementById('cad-valor').value = '';
+    document.getElementById('cad-valor').value     = '';
   } else {
     document.getElementById('alerta-cadastro').innerHTML =
       `<div class="alert alert-error">❌ ${data.erro}</div>`;

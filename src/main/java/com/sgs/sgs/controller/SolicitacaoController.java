@@ -98,4 +98,23 @@ public class SolicitacaoController {
                 "categorias",   service.listarCategorias()
         ));
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> editar(@PathVariable Long id,
+                                    @RequestBody Map<String, Object> body) {
+        try {
+            Long solicitanteId = Long.valueOf(body.get("solicitanteId").toString());
+            Long categoriaId   = Long.valueOf(body.get("categoriaId").toString());
+            String descricao   = body.get("descricao").toString();
+            BigDecimal valor   = new BigDecimal(body.get("valor").toString());
+
+            Solicitacao editada = service.editar(id, solicitanteId, categoriaId, descricao, valor);
+            return ResponseEntity.ok(Map.of(
+                    "id", editada.getId(),
+                    "mensagem", "Solicitação editada com sucesso"
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("erro", e.getMessage()));
+        }
+    }
 }

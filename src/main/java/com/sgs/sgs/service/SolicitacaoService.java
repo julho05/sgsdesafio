@@ -111,4 +111,24 @@ public class SolicitacaoService {
     public List<Categoria> listarCategorias() {
         return categoriaRepository.findAll();
     }
+
+    public Solicitacao editar(Long id, Long solicitanteId, Long categoriaId,
+                              String descricao, BigDecimal valor) {
+
+        Solicitacao solicitacao = solicitacaoRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Solicitação não encontrada"));
+
+        Solicitante solicitante = solicitanteRepository.findById(solicitanteId)
+                .orElseThrow(() -> new IllegalArgumentException("Solicitante não encontrado"));
+
+        Categoria categoria = categoriaRepository.findById(categoriaId)
+                .orElseThrow(() -> new IllegalArgumentException("Categoria não encontrada"));
+
+        solicitacao.setSolicitante(solicitante);
+        solicitacao.setCategoria(categoria);
+        solicitacao.setDescricao(descricao);
+        solicitacao.setValor(valor);
+
+        return solicitacaoRepository.save(solicitacao);
+    }
 }

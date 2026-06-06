@@ -248,3 +248,5 @@ tr:hover td {
   color: #aaa;
   padding: 40px;
 }
+
+.btn-edit { background: #e0f2fe; color: #0369a1; }
